@@ -8,8 +8,6 @@
 #include "Algorithms/RadixSort.hpp"
 #include "Algorithms/ShellSort.hpp"
 #include "Algorithms/Search.hpp"
-#include "Algorithms/JumpSearch.hpp"
-#include "Algorithms/TernarySearch.hpp"
 #include "Algorithms/InterpolationSearch.hpp"
 #include "Algorithms/ExponentialSearch.hpp"
 // Structures

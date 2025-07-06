@@ -222,7 +222,7 @@ public:
     }
 
     void print_as_array() const {
-        utils::Print::printVector(data, "Stack: ");
+        utils::Print::printVectorWithPrefix(data, "Stack: ");
         std::cout << std::endl;
     }
 

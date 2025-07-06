@@ -340,15 +340,20 @@ public:
 
     // Utility functions
     void print() const {
-        utils::Print::printVector(data, "Array: ");
+        utils::Print::printVectorWithPrefix(data, "Array: ");
         std::cout << std::endl;
+    }
+    
+    // Convert to std::vector
+    std::vector<T> to_vector() const {
+        return std::vector<T>(data.begin(), data.begin() + size_);
     }
 
     void print_range(size_t start, size_t end) const {
         if (start >= size_ || end > size_ || start >= end) {
             throw std::out_of_range("Invalid print range");
         }
-        utils::Print::printVector(std::vector<T>(data.begin() + start, data.begin() + end), "Range: ");
+        utils::Print::printVectorWithPrefix(std::vector<T>(data.begin() + start, data.begin() + end), "Range: ");
         std::cout << std::endl;
     }
 

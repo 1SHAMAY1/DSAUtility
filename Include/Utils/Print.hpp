@@ -58,7 +58,7 @@ public:
     }
 
     template<typename T>
-    static void printVector(const std::vector<T>& vec, const std::string& prefix, 
+    static void printVectorWithPrefix(const std::vector<T>& vec, const std::string& prefix, 
                           const std::string& separator = " ") {
         std::cout << prefix;
         printVector(vec, separator);

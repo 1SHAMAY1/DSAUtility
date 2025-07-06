@@ -5,6 +5,8 @@
 #include <initializer_list>
 #include <vector>
 #include <queue>
+#include <string>
+#include <sstream>
 #include "../Utils/Print.hpp"
 #include "../Utils/Logger.hpp"
 
@@ -12,17 +14,16 @@ namespace dsa {
 namespace structures {
 
 /**
- * @brief Node structure for Binary Search Tree
+ * @brief Binary Search Tree Node structure
  */
 template<typename T>
 struct BSTNode {
     T data;
     std::unique_ptr<BSTNode<T>> left;
     std::unique_ptr<BSTNode<T>> right;
-    BSTNode<T>* parent;
     
-    BSTNode(const T& value) : data(value), left(nullptr), right(nullptr), parent(nullptr) {}
-    BSTNode(T&& value) : data(std::move(value)), left(nullptr), right(nullptr), parent(nullptr) {}
+    BSTNode(const T& value) : data(value), left(nullptr), right(nullptr) {}
+    BSTNode(T&& value) : data(std::move(value)), left(nullptr), right(nullptr) {}
 };
 
 /**
@@ -67,7 +68,6 @@ public:
     
     BinarySearchTree& operator=(BinarySearchTree&& other) noexcept {
         if (this != &other) {
-            clear();
             root = std::move(other.root);
             size_ = other.size_;
             other.size_ = 0;
@@ -75,45 +75,11 @@ public:
         return *this;
     }
     
-    // Capacity
+    // Accessors
     bool empty() const { return size_ == 0; }
     size_t size() const { return size_; }
     
-    // Element access
-    T& min() {
-        if (empty()) {
-            throw std::out_of_range("Tree is empty");
-        }
-        return find_min(root.get())->data;
-    }
-    
-    const T& min() const {
-        if (empty()) {
-            throw std::out_of_range("Tree is empty");
-        }
-        return find_min(root.get())->data;
-    }
-    
-    T& max() {
-        if (empty()) {
-            throw std::out_of_range("Tree is empty");
-        }
-        return find_max(root.get())->data;
-    }
-    
-    const T& max() const {
-        if (empty()) {
-            throw std::out_of_range("Tree is empty");
-        }
-        return find_max(root.get())->data;
-    }
-    
     // Modifiers
-    void clear() {
-        root.reset();
-        size_ = 0;
-    }
-    
     void insert(const T& value) {
         root = insert_recursive(std::move(root), value);
         size_++;
@@ -124,17 +90,29 @@ public:
         size_++;
     }
     
+    void remove(const T& value) {
+        if (contains(value)) {
+            root = remove_recursive(std::move(root), value);
+            size_--;
+        }
+    }
+    
+    void clear() {
+        root.reset();
+        size_ = 0;
+    }
+    
     template<typename... Args>
     void emplace(Args&&... args) {
         T value(std::forward<Args>(args)...);
         insert(std::move(value));
     }
     
-    void remove(const T& value) {
-        if (contains(value)) {
-            root = remove_recursive(std::move(root), value);
-            size_--;
-        }
+    // BST-specific operations
+    void balance() {
+        std::vector<T> elements = inorder();
+        clear();
+        build_balanced_tree(elements, 0, elements.size() - 1);
     }
     
     // Search operations
@@ -247,16 +225,10 @@ public:
     
     bool is_perfect() const {
         size_t h = height();
-        return size() == (1ULL << h) - 1;
+        return this->size() == (1ULL << h) - 1;
     }
     
     // Tree operations
-    void balance() {
-        std::vector<T> elements = inorder();
-        clear();
-        build_balanced_tree(elements, 0, elements.size() - 1);
-    }
-    
     void mirror() {
         mirror_recursive(root.get());
     }
@@ -264,7 +236,9 @@ public:
     BinarySearchTree<T> get_left_subtree() const {
         BinarySearchTree<T> subtree;
         if (root && root->left) {
-            subtree.copy_tree(root->left.get());
+            subtree.root = std::make_unique<BSTNode<T>>(root->left->data);
+            copy_subtree(root->left.get(), subtree.root.get());
+            subtree.size_ = count_nodes(subtree.root.get());
         }
         return subtree;
     }
@@ -272,40 +246,30 @@ public:
     BinarySearchTree<T> get_right_subtree() const {
         BinarySearchTree<T> subtree;
         if (root && root->right) {
-            subtree.copy_tree(root->right.get());
+            subtree.root = std::make_unique<BSTNode<T>>(root->right->data);
+            copy_subtree(root->right.get(), subtree.root.get());
+            subtree.size_ = count_nodes(subtree.root.get());
         }
         return subtree;
     }
     
-    // Mathematical operations (for numeric types)
+    // Mathematical operations (for arithmetic types)
     template<typename U = T>
     typename std::enable_if<std::is_arithmetic<U>::value, T>::type sum() const {
         std::vector<T> elements = inorder();
-        T result = T{};
-        for (const auto& item : elements) {
-            result += item;
+        T total = T();
+        for (const auto& element : elements) {
+            total += element;
         }
-        return result;
+        return total;
     }
     
     template<typename U = T>
     typename std::enable_if<std::is_arithmetic<U>::value, double>::type average() const {
-        if (empty()) {
-            throw std::out_of_range("Tree is empty");
+        if (this->empty()) {
+            return 0.0;
         }
-        return static_cast<double>(sum()) / size();
-    }
-    
-    // Comparison operators
-    bool operator==(const BinarySearchTree& other) const {
-        if (size_ != other.size_) return false;
-        std::vector<T> this_inorder = inorder();
-        std::vector<T> other_inorder = other.inorder();
-        return this_inorder == other_inorder;
-    }
-    
-    bool operator!=(const BinarySearchTree& other) const {
-        return !(*this == other);
+        return static_cast<double>(sum()) / this->size();
     }
     
     // Utility functions
@@ -315,35 +279,35 @@ public:
     
     void print_inorder() const {
         std::vector<T> elements = inorder();
-        utils::Print::printVector(elements, "Inorder: ");
+        utils::Print::printVectorWithPrefix(elements, "Inorder: ");
         std::cout << std::endl;
     }
     
     void print_preorder() const {
         std::vector<T> elements = preorder();
-        utils::Print::printVector(elements, "Preorder: ");
+        utils::Print::printVectorWithPrefix(elements, "Preorder: ");
         std::cout << std::endl;
     }
     
     void print_postorder() const {
         std::vector<T> elements = postorder();
-        utils::Print::printVector(elements, "Postorder: ");
+        utils::Print::printVectorWithPrefix(elements, "Postorder: ");
         std::cout << std::endl;
     }
     
     void print_levelorder() const {
         std::vector<T> elements = levelorder();
-        utils::Print::printVector(elements, "Levelorder: ");
+        utils::Print::printVectorWithPrefix(elements, "Levelorder: ");
         std::cout << std::endl;
     }
     
     std::string to_string() const {
         std::stringstream ss;
-        ss << "BinarySearchTree[size=" << size_ << ", height=" << height() << "]";
+        ss << "BinarySearchTree[size=" << size_ << ", height=" << height() << ", balanced=" << is_balanced() << "]";
         return ss.str();
     }
     
-    // Iterator support (basic implementation)
+    // Iterator support
     class Iterator {
     private:
         std::vector<T> elements;
@@ -411,6 +375,8 @@ private:
             node->left = insert_recursive(std::move(node->left), value);
         } else if (value > node->data) {
             node->right = insert_recursive(std::move(node->right), value);
+        } else {
+            return node; // Duplicate values not allowed
         }
         
         return node;
@@ -425,6 +391,8 @@ private:
             node->left = insert_recursive(std::move(node->left), std::move(value));
         } else if (value > node->data) {
             node->right = insert_recursive(std::move(node->right), std::move(value));
+        } else {
+            return node; // Duplicate values not allowed
         }
         
         return node;
@@ -522,11 +490,28 @@ private:
         }
     }
     
+    void copy_subtree(BSTNode<T>* source, BSTNode<T>* target) {
+        if (source->left) {
+            target->left = std::make_unique<BSTNode<T>>(source->left->data);
+            copy_subtree(source->left.get(), target->left.get());
+        }
+        if (source->right) {
+            target->right = std::make_unique<BSTNode<T>>(source->right->data);
+            copy_subtree(source->right.get(), target->right.get());
+        }
+    }
+    
+    size_t count_nodes(BSTNode<T>* node) const {
+        if (!node) return 0;
+        return 1 + count_nodes(node->left.get()) + count_nodes(node->right.get());
+    }
+    
     void build_balanced_tree(const std::vector<T>& elements, size_t start, size_t end) {
         if (start > end) return;
         
         size_t mid = (start + end) / 2;
         insert(elements[mid]);
+        
         build_balanced_tree(elements, start, mid - 1);
         build_balanced_tree(elements, mid + 1, end);
     }

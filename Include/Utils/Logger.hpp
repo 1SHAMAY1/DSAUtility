@@ -10,6 +10,9 @@
 #include <thread>
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <functional>
+#include <utility>
 
 namespace dsa {
 namespace utils {
@@ -88,6 +91,17 @@ private:
         ss << "[" << std::this_thread::get_id() << "] ";
         ss << message;
         return ss.str();
+    }
+    
+    // Helper function to build message from arguments
+    template<typename... Args>
+    void buildMessage(std::stringstream& ss, const Args&... args) {
+        (ss << ... << args);
+    }
+    
+    template<typename T>
+    void buildMessage(std::stringstream& ss, const T& arg) {
+        ss << arg;
     }
 
 public:
@@ -176,7 +190,7 @@ public:
         
         // Build message from arguments
         std::stringstream ss;
-        (ss << ... << args);
+        buildMessage(ss, args...);
         std::string message = ss.str();
 
         // Format message
@@ -264,59 +278,60 @@ public:
 
     // Static convenience methods
     template<typename... Args>
-    static void debug(const Args&... args) {
+    static void debug_static(const Args&... args) {
         getGlobalLogger().debug(args...);
     }
 
     template<typename... Args>
-    static void info(const Args&... args) {
+    static void info_static(const Args&... args) {
         getGlobalLogger().info(args...);
     }
 
     template<typename... Args>
-    static void warning(const Args&... args) {
+    static void warning_static(const Args&... args) {
         getGlobalLogger().warning(args...);
     }
 
     template<typename... Args>
-    static void error(const Args&... args) {
+    static void error_static(const Args&... args) {
         getGlobalLogger().error(args...);
     }
 
     template<typename... Args>
-    static void critical(const Args&... args) {
+    static void critical_static(const Args&... args) {
         getGlobalLogger().critical(args...);
     }
 };
 
-// Initialize static members
-std::unique_ptr<Logger> Logger::global_logger = nullptr;
-std::mutex Logger::global_mutex;
+// Static member declarations (defined in separate .cpp file if needed)
+// For header-only library, we'll use inline initialization
+inline std::unique_ptr<Logger> Logger::global_logger = nullptr;
+inline std::mutex Logger::global_mutex;
 
 // Convenience functions for global logging
 template<typename... Args>
 void logDebug(const Args&... args) {
-    Logger::debug(args...);
+    Logger::debug_static(args...);
 }
 
 template<typename... Args>
 void logInfo(const Args&... args) {
-    Logger::info(args...);
+    Logger::info_static(args...);
 }
 
 template<typename... Args>
 void logWarning(const Args&... args) {
-    Logger::warning(args...);
+    Logger::warning_static(args...);
 }
 
 template<typename... Args>
 void logError(const Args&... args) {
-    Logger::error(args...);
+    Logger::error_static(args...);
 }
 
 template<typename... Args>
 void logCritical(const Args&... args) {
-    Logger::critical(args...);
+    Logger::critical_static(args...);
 }
 
 } // namespace utils
