@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <stdexcept>
 
 template <typename T>
 class LinkedList {
@@ -17,6 +18,7 @@ protected:
 
 public:
     LinkedList() : head(nullptr), length(0) {}
+
     virtual ~LinkedList() {
         clear();
     }
@@ -54,6 +56,34 @@ public:
         length = 0;
     }
 
-    size_t size() const { return length; }
-    bool empty() const { return head == nullptr; }
+    virtual T front() const {
+        if (!head) {
+            throw std::out_of_range("LinkedList is empty");
+        }
+        return head->data;
+    }
+
+    virtual void pop_front() {
+        if (!head) return;
+        Node* temp = head;
+        head = head->next;
+        delete temp;
+        --length;
+    }
+
+    virtual void push_front(const T& value) {
+    Node* newNode = new Node(value);
+    newNode->next = head;
+    head = newNode;
+    ++length;
+}
+
+
+    size_t size() const {
+        return length;
+    }
+
+    bool empty() const {
+        return head == nullptr;
+    }
 };

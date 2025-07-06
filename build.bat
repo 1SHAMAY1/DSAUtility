@@ -1,17 +1,19 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: Get the absolute path of the batch file's directory
+:: Set root and build dir
 set "ROOT_DIR=%~dp0"
 set "ROOT_DIR=%ROOT_DIR:~0,-1%"
 set "BUILD_DIR=%ROOT_DIR%\build"
 
-:: Create build directory if it doesn't exist
-if not exist "%BUILD_DIR%" (
-    mkdir "%BUILD_DIR%"
+:: Delete old build directory
+if exist "%BUILD_DIR%" (
+    echo Removing old build directory...
+    rmdir /s /q "%BUILD_DIR%"
 )
 
-:: Move into build directory
+:: Recreate build directory
+mkdir "%BUILD_DIR%"
 cd /d "%BUILD_DIR%"
 
 :: Run CMake generation
@@ -20,7 +22,7 @@ cmake "%ROOT_DIR%" || goto :build_failed
 :: Build the project
 cmake --build . || goto :build_failed
 
-:: Detect build configuration directory (usually Debug)
+:: Check for Debug or flat demo.exe
 set "DEMO_EXE_PATH=%BUILD_DIR%\Debug\demo.exe"
 if not exist "!DEMO_EXE_PATH!" (
     set "DEMO_EXE_PATH=%BUILD_DIR%\demo.exe"
