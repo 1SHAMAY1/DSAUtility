@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <algorithm>
 
 template<typename T>
 void printArray(const T* arr, size_t size) {

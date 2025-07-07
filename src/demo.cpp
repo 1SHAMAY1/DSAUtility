@@ -2,25 +2,38 @@
 #include <string>
 #include <limits>
 #include <algorithm>
+#include <vector>
 
 // Array
-#include "structure/array/Array.hpp"
-#include "structure/array/ArrayUtils.hpp"
+#include "structure/Linear/array/Array.hpp"
+#include "structure//Linear/array/ArrayUtils.hpp"
 
 // Linked Lists
-#include "structure/list/LinkedList.hpp"
-#include "structure/list/DoublyLinkedList.hpp"
-#include "structure/list/CircularLinkedList.hpp"
+#include "structure/Linear/list/LinkedList.hpp"
+#include "structure/Linear/list/DoublyLinkedList.hpp"
+#include "structure/Linear/list/CircularLinkedList.hpp"
 
 // Stack
-#include "structure/stack/IStack.hpp"
-#include "structure/stack/ArrayStack.hpp"
-#include "structure/stack/LinkedListStack.hpp"
+#include "structure/Linear/stack/IStack.hpp"
+#include "structure/Linear/stack/ArrayStack.hpp"
+#include "structure/Linear/stack/LinkedListStack.hpp"
 
 // Queue
-#include "structure/queue/IQueue.hpp"
-#include "structure/queue/ArrayQueue.hpp"
-#include "structure/queue/LinkedListQueue.hpp"
+#include "structure/Linear/queue/IQueue.hpp"
+#include "structure/Linear/queue/ArrayQueue.hpp"
+#include "structure/Linear/queue/LinkedListQueue.hpp"
+
+// Sorting Algorithms
+#include "Algorithms/Sort.hpp"
+#include "Algorithms/QuickSort.hpp"
+#include "Algorithms/MergeSort.hpp"
+#include "Algorithms/HeapSort.hpp"
+#include "Algorithms/BinarySearch.hpp"
+#include "Algorithms/BFS.hpp"
+#include "Algorithms/DFS.hpp"
+#include "Algorithms/Dijkstra.hpp"
+#include "Algorithms/UnionFind.hpp"
+#include "Algorithms/LCA.hpp"
 
 using namespace std;
 
@@ -304,11 +317,112 @@ void testQueue() {
     }
 }
 
+void testAlgorithms() {
+    cout << "\nAlgorithms Demo:\n";
+    cout << "1. Sorting Algorithms\n2. Binary Search\n3. BFS\n4. DFS\n5. Dijkstra\n6. Union-Find\n7. LCA (binary tree with parent)\nChoose (1-7): ";
+    int opt; cin >> opt; clearInput();
+    switch (opt) {
+        case 1: {
+            using namespace algo;
+            int algoType;
+            cout << "Sorting Algorithm:\n 1. QuickSort\n 2. MergeSort\n 3. HeapSort\nChoose (1-3): ";
+            cin >> algoType;
+            clearInput();
+            int n;
+            cout << "Enter number of elements: ";
+            cin >> n;
+            clearInput();
+            vector<int> arr(n);
+            for (int i = 0; i < n; ++i) {
+                cout << "Element " << (i + 1) << ": ";
+                cin >> arr[i];
+            }
+            cout << "\nOriginal array: ";
+            for (int x : arr) cout << x << ' ';
+            cout << endl;
+            switch (algoType) {
+                case 1:
+                    quickSort(arr.begin(), arr.end());
+                    cout << "Sorted with QuickSort: ";
+                    break;
+                case 2:
+                    mergeSort(arr.begin(), arr.end());
+                    cout << "Sorted with MergeSort: ";
+                    break;
+                case 3:
+                    heapSort(arr.begin(), arr.end());
+                    cout << "Sorted with HeapSort: ";
+                    break;
+                default:
+                    cout << "Invalid sorting algorithm.\n";
+                    return;
+            }
+            for (int x : arr) cout << x << ' ';
+            cout << endl;
+            break;
+        }
+        case 2: {
+            vector<int> arr = {1, 3, 5, 7, 9};
+            int val; cout << "Enter value to search: "; cin >> val;
+            bool found = ::binary_search(arr.begin(), arr.end(), val);
+            cout << (found ? "Found\n" : "Not found\n");
+            break;
+        }
+        case 3: {
+            vector<vector<int>> adj = {{1,2},{0,3},{0,3},{1,2}};
+            cout << "BFS from node 0: ";
+            bfs(adj, 0, [](int u){ cout << u << ' '; });
+            cout << endl;
+            break;
+        }
+        case 4: {
+            vector<vector<int>> adj = {{1,2},{0,3},{0,3},{1,2}};
+            vector<bool> visited(4, false);
+            cout << "DFS from node 0: ";
+            dfs(adj, 0, visited, [](int u){ cout << u << ' '; });
+            cout << endl;
+            break;
+        }
+        case 5: {
+            vector<vector<pair<int,int>>> adj = {
+                {{1,2},{2,4}}, // 0
+                {{2,1}},       // 1
+                {{3,1}},       // 2
+                {}             // 3
+            };
+            auto dist = dijkstra(adj, 0);
+            cout << "Dijkstra distances from 0: ";
+            for (auto d : dist) cout << d << ' ';
+            cout << endl;
+            break;
+        }
+        case 6: {
+            UnionFind uf(5);
+            uf.unite(0,1); uf.unite(1,2);
+            cout << "0 and 2 connected? " << (uf.connected(0,2)?"Yes":"No") << endl;
+            cout << "3 and 4 connected? " << (uf.connected(3,4)?"Yes":"No") << endl;
+            uf.unite(3,4);
+            cout << "3 and 4 connected after union? " << (uf.connected(3,4)?"Yes":"No") << endl;
+            break;
+        }
+        case 7: {
+            struct Node { int val; Node* left=nullptr; Node* right=nullptr; Node* parent=nullptr; Node(int v):val(v){} };
+            Node n1(1), n2(2), n3(3), n4(4), n5(5);
+            n1.left=&n2; n1.right=&n3; n2.parent=&n1; n3.parent=&n1;
+            n2.left=&n4; n2.right=&n5; n4.parent=&n2; n5.parent=&n2;
+            Node* res = lca(&n4, &n5);
+            cout << "LCA of 4 and 5: " << (res?res->val:-1) << endl;
+            break;
+        }
+        default: cout << "Invalid algorithm choice.\n";
+    }
+}
+
 // === Entry Point ===
 
 int main() {
     cout << "\n=== DSA Tester ===\n";
-    cout << "1. Array\n2. Linked List\n3. Stack\n4. Queue\nChoose (1-4): ";
+    cout << "1. Array\n2. Linked List\n3. Stack\n4. Queue\n5. Algorithms\nChoose (1-5): ";
 
     int option;
     cin >> option;
@@ -319,6 +433,7 @@ int main() {
         case 2: testLinkedList(); break;
         case 3: testStack(); break;
         case 4: testQueue(); break;
+        case 5: testAlgorithms(); break;
         default: cout << "Invalid top-level choice.\n"; return 1;
     }
 
